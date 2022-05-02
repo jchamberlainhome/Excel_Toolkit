@@ -1,0 +1,779 @@
+
+'''''''''''''''File Updated 11/16/2021'''''''''''''''''''''
+'''''''''''''''Name Removed''''''''''''''''''''''''''''
+
+''''''''''''''''''Formatting'''''''''''''''''''''''''''''''
+Sub Sheet_preferences()
+'
+'PURPOSE:Set sheet to my preferences
+'
+Dim tb As ListObject
+    Dim boolTable As Boolean
+    
+
+    'Prevent screen flicker
+    Application.ScreenUpdating = False
+    
+    ActiveWindow.Zoom = 90
+    
+    With ActiveSheet
+        'Check if A1 is part of a Table
+        boolTable = False
+        For Each tb In .ListObjects
+            If Not Intersect(.range("A1"), tb.range) Is Nothing Then
+                'We are part of a table
+                tb.ShowAutoFilter = True
+                boolTable = True
+                Exit For
+            End If
+        Next tb
+        
+        'Do we need to check sheet?
+        If boolTable = False Then
+            If Not .AutoFilterMode Then
+                'Apply one if there's not already
+                .range("A1").CurrentRegion.AutoFilter
+            End If
+        End If
+        
+        .Cells.EntireColumn.AutoFit
+        .Cells.EntireRow.AutoFit
+    End With
+        
+    Application.ScreenUpdating = True
+End Sub
+Sub Convert_Upper_Case()
+'PURPOSE: Converts selected range to upper case
+Dim rng As range
+For Each rng In Selection
+    rng.Value = UCase(rng.Value)
+Next rng
+End Sub
+
+Sub Convert_Lower_Case()
+'PURPOSE: Converts selected range to lower case
+Dim rng As range
+For Each rng In Selection
+    rng.Value = LCase(rng.Value)
+Next rng
+End Sub
+
+Sub Convert_Proper_Case()
+'PURPOSE: Converts selected range to proper case
+Dim rng As range
+For Each rng In Selection
+If WorksheetFunction.IsText(rng) Then
+    rng.Value = WorksheetFunction.Proper(rng.Value)
+End If
+Next rng
+End Sub
+Sub Clear_Hyperlinks()
+'PURPOSE: clears hyperlink formatting
+
+ActiveSheet.Hyperlinks.Delete
+
+End Sub
+
+Sub Auto_Fit_Columns()
+'PURPOSE: This code quickly auto fits all the columns in your worksheet. So when you run this code, it will select all the cells in your worksheet and instantly auto-fit all the columns.
+Cells.Select
+Cells.EntireColumn.AutoFit
+End Sub
+
+Sub Auto_Fit_Rows()
+'PURPOSE: You can use this code to auto-fit all the rows in a worksheet. When you run this code it will select all the cells in your worksheet and instantly auto-fit all the row.
+Cells.Select
+Cells.EntireRow.AutoFit
+End Sub
+
+Sub Remove_Text_Wrap()
+'PURPOSE:  This code will help you to remove text wrap from the entire worksheet with a single click. It will first select all the columns and then remove text wrap and auto fit all the rows and columns. There's also a shortcut that you can use (Alt + H +W) for but if you add this code to the toolkit, it's easier than keyboard shortcut.
+range("A1").WrapText = False
+End Sub
+
+Sub Spell_Check()
+'PURPOSE:Quick access Spell Check
+For Each sh In Worksheets
+    Sheets(sh.Name).Cells.CheckSpelling
+Next
+End Sub
+
+Sub Spell_Check_Highlight_Cells()
+'PURPOSE: Highlights cells with misspelled words
+Dim rng As range
+For Each rng In ActiveSheet.UsedRange
+'Check the spelling and if it's wrong, then change the style to be Bad
+If Not Application.CheckSpelling(word:=rng.Text) Then
+'Check the spelling and if it's CORRECT, then change the style to be Bad (leave this commented)
+'If Application.CheckSpelling(word:=rng.Text) Then
+rng.Style = "Bad"
+End If
+Next rng
+End Sub
+Sub Fit_All_Columns()
+'PURPOSE: Auto-adjusts the width of all used columns and rows on the active worksheet
+    Dim ws As Worksheet
+    Dim Col As range
+    
+    Set ws = ActiveSheet
+    ws.UsedRange.Columns.AutoFit ' auto size all columns
+    For Each Col In ws.UsedRange.Columns
+        If Col.ColumnWidth > 100 Then
+            Col.ColumnWidth = 100
+        End If
+    Next Col
+End Sub
+Sub Fit_All_Rows()
+'PURPOSE: Auto-adjusts the width of all used columns and rows on the active worksheet
+    ActiveSheet.UsedRange.Rows.AutoFit
+End Sub
+
+Sub Restore_All_Default_Cell_Size()
+'PURPOSE: restores the default cell height and width
+    ActiveSheet.Cells.UseStandardHeight = True
+    ActiveSheet.Cells.UseStandardWidth = True
+    
+    AddSavedTime 7, 1
+End Sub
+
+Sub Convert_To_Values()
+'PURPOSE: Converts all formulas to fixed values
+Dim myRange As range
+Dim myCell As range
+Select Case MsgBox("You Can't Undo This Action. " & "Save Workbook First?", vbYesNoCancel, "Alert")
+Case Is = vbYes
+ThisWorkbook.Save
+Case Is = vbCancel
+Exit Sub
+End Select
+Set myRange = Selection
+For Each myCell In myRange
+If myCell.HasFormula Then
+myCell.Formula = myCell.Value
+End If
+Next myCell
+End Sub
+
+''''''''''''''''''Search and Destroy''''''''''''''''''''
+Sub Look_for_blanks()
+'PURPOSE: looks for blank spaces in cells
+Dim rng As range
+For Each rng In ActiveSheet.UsedRange
+If rng.Value = " " Then
+rng.Style = "Note"
+End If
+Next rng
+End Sub
+
+Sub Show_Duplicate_Values()
+'PURPOSE: Shows duplicate values in a selected range.
+Dim myRange As range
+Dim myCell As range
+Set myRange = Selection
+For Each myCell In myRange
+If WorksheetFunction.CountIf(myRange, myCell.Value) > 1 Then
+myCell.Interior.ColorIndex = 36
+End If
+Next myCell
+End Sub
+
+Sub Show_Unique_Values()
+'PURPOSE: highlights all unique values in a selection
+Dim rng As range
+Set rng = Selection
+rng.FormatConditions.Delete
+Dim uv As UniqueValues
+Set uv = rng.FormatConditions.AddUniqueValues
+uv.DupeUnique = xlUnique
+uv.Interior.Color = vbGreen
+End Sub
+
+Sub Show_Greater_Than_Values()
+'PURPOSE: Highlights values greater than a value entered in a dialog box
+Dim i As Integer
+i = InputBox("Enter Greater Than Value", "Enter Value")
+Selection.FormatConditions.Delete
+Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, Formula1:=i
+Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+With Selection.FormatConditions(1)
+.Font.Color = RGB(0, 0, 0)
+.Interior.Color = RGB(31, 218, 154)
+End With
+End Sub
+
+Sub Show_Less_Than_Values()
+'PURPOSE: Highlights values less than a value entered in a dialog box
+Dim i As Integer
+i = InputBox("Enter Less Than Value", "Enter Value")
+Selection.FormatConditions.Delete
+Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlLess, Formula1:=i
+Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+With Selection.FormatConditions(1)
+.Font.Color = RGB(0, 0, 0)
+.Interior.Color = RGB(217, 83, 79)
+End With
+End Sub
+
+Sub Show_Custom_Text()
+'PURPOSE: Get the Custom Text
+Dim txt As String
+txt = InputBox("Enter the Custom Text", "Text")
+ Dim rng As range
+'Loop through all values in the selection
+For Each rng In Selection
+'If the value is the same as the custom text, then set the font color to red
+If rng.Value = txt Then
+rng.Font.Color = RGB(255, 0, 0)
+End If
+Next
+End Sub
+Sub Show_Cells_With_Formulas()
+'PURPOSE: Formats all cells with formulas as yellow.
+
+Dim rng As range
+
+For Each rng In Cells.SpecialCells(xlCellTypeFormulas)
+
+rng.Interior.ColorIndex = 6
+
+Next rng
+End Sub
+Sub Show_Cells_With_Formulas_undo()
+'PURPOSE: Formats all cells with formulas as yellow.
+
+Dim rng As range
+
+For Each rng In Cells.SpecialCells(xlCellTypeFormulas)
+
+rng.Interior.ColorIndex = -4142
+
+Next rng
+End Sub
+Sub Show_hidden_columns()
+'PURPOSE: displays all hidden columns
+
+Columns.EntireColumn.Hidden = False
+
+End Sub
+
+''''''''''''''''''Utilities'''''''''''''''''''''''''''''
+Sub IFERROR0()
+'PURPOSE: wraps formulas with the if error format
+Dim row As Long
+Dim Col As Long
+Dim FormulaString As String
+Dim ReadArr As Variant
+
+If Selection.Cells.Count > 1 Then
+    ReadArr = Selection.FormulaR1C1
+    For row = LBound(ReadArr, 1) To UBound(ReadArr, 1)
+        For Col = LBound(ReadArr, 2) To UBound(ReadArr, 2)
+            If Left(ReadArr(row, Col), 1) = "=" Then
+            If LCase(Left(ReadArr(row, Col), 8)) <> "=iferror" Then
+                ReadArr(row, Col) = "=iferror(" & Right(ReadArr(row, Col), Len(ReadArr(row, Col)) - 1) & ",""N/A"")"
+            End If
+            End If
+        Next
+    Next
+    Selection.FormulaR1C1 = ReadArr
+    Erase ReadArr
+Else
+    FormulaString = Selection.FormulaR1C1
+    If Left(FormulaString, 1) = "=" Then
+        If LCase(Left(FormulaString, 8)) <> "=iferror" Then
+            Selection.FormulaR1C1 = "=iferror(" & Right(FormulaString, Len(FormulaString) - 1) & ",""N/A"")"
+        End If
+    End If
+End If
+End Sub
+Sub Google_that()
+'PURPOSE:This uses your default browser to google something within Excel.
+' Google_that Macro
+' This uses your default browser to google something within Excel.
+' Created by Jeff Chamberlain
+' Updated 07/08/2020 to modify input message box
+'
+Dim MyURL As String
+Dim search_string As String
+Dim query As String
+query = InputBox("Enter here your search here", "Google Search")
+search_string = query
+search_string = Replace(search_string, " ", "+")
+MyURL = "https:/google.com/search?q="
+
+ActiveWorkbook.FollowHyperlink Address:=MyURL & search_string
+End Sub
+
+Sub Style_Killer()
+'PURPOSE: Clears all the styles in the entire workbook.
+Dim styT As Style
+'CONFIRMATION THAT YOU WANT TO DELETE STYLES
+    If MsgBox("There are: " & ActiveWorkbook.Styles.Count - 47 & " custom styles." & vbNewLine & vbNewLine & _
+    "Delete?", vbInformation + vbYesNo) <> vbYes Then Exit Sub
+    
+    'STATUS BAR UPDATE SO YOU KNOW WHAT'S HAPENNING AND HOW LONG ITS BEEN
+    Application.StatusBar = "Deleting styles: Started: " & Time
+    
+    'ONE SECOND GAP GIVING YOU TIME TO BREAK IF NECESSARY
+    Application.Wait Now + (#12:00:01 AM#)
+    
+    For Each styT In ActiveWorkbook.Styles
+    
+        If Not styT.BuiltIn Then styT.Delete
+    
+    Next styT
+'CLEAR STATUS BAR
+    Application.StatusBar = False
+    
+End Sub
+
+Sub List_Conditional_Formatting_Rules()
+'PURPOSE: Creates a sheet that lists out the created conditional formats
+Dim ws As Worksheet, wsCF As Worksheet, NR As Long
+Dim CFrule As FormatCondition, rng As range
+On Error Resume Next
+Sheets.Add(After:=Sheets(Sheets.Count)).Name = "CF Rules"
+Set wsCF = Sheets("CF Rules")
+wsCF.range("A1:C1").Value = [{"Sheet","Formula","Range"}]
+NR = 2
+For Each ws In Worksheets
+ If ws.Name <> "CF Rules" Then
+  Set rng = ws.Cells
+  For Each CFrule In rng.FormatConditions
+   wsCF.range("A" & NR).Value = ws.Name
+   wsCF.range("B" & NR).Value = "'" & CFrule.Formula1
+   wsCF.range("C" & NR).Value = CFrule.AppliesTo.Address
+   NR = NR + 1
+  Next CFrule
+ End If
+Next ws
+wsCF.Columns.AutoFit
+End Sub
+
+Sub Send_Mail()
+'PURPOSE: Sends the open, active workbook as an attachment with Outlook
+Dim OutApp As Object
+Dim OutMail As Object
+Set OutApp = CreateObject("Outlook.Application")
+Set OutMail = OutApp.CreateItem(0)
+With OutMail
+.To = "jchamberlain@edwps.com"
+.Subject = "Weekly Report for Bill Cline"
+.Body = "Here are the numbers for the weekly report. See you Soon."
+.Attachments.Add ActiveWorkbook.FullName
+.display
+End With
+Set OutMail = Nothing
+Set OutApp = Nothing
+End Sub
+
+Sub Worksheet_Protect()
+'PURPOSE: Quick access to protect worksheet
+Dim ws As Worksheet
+Dim ps As String
+ps = InputBox("Enter a Password.", vbOKCancel)
+For Each ws In ActiveWorkbook.Worksheets
+ws.Protect Password:=ps
+Next ws
+End Sub
+
+Sub Worksheet_UnProtect()
+'PURPOSE: Quick access to unprotect worksheet
+Dim ws As Worksheet
+Dim ps As String
+ps = InputBox("Enter a Password.", vbOKCancel)
+For Each ws In ActiveWorkbook.Worksheets
+ws.Unprotect Password:=ps
+Next ws
+End Sub
+
+Sub Worksheet_Protect_No_Password()
+'PURPOSE: Quick access to protect worksheet with no password
+      ' Loop through all sheets in the workbook
+      For i = 1 To Sheets.Count
+         Sheets(i).Protect
+      Next i
+End Sub
+
+Sub Worksheet_UnProtect_No_Password()
+'PURPOSE: Quick access to un protect worksheet with no password
+      ' Loop through all sheets in the workbook
+      For i = 1 To Sheets.Count
+         Sheets(i).Unprotect
+      Next i
+End Sub
+
+''''''''''''''''''Misc''''''''''''''''''''''''''''''''''
+
+Sub Add_Row_With_Number_need_to_test()
+'PURPOSE: Adds a row with number
+Dim ws As Worksheet
+Set ws = ActiveSheet
+Dim tbl As ListObject
+Set tbl = ws.ListObjects("Table1")
+'add a row at the end of the table
+tbl.ListRows.Add
+    'ActiveCell.FormulaR1C1 = "=+R[-1]C+1"
+    Selection.Copy
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False
+End Sub
+
+Sub Add_Row_With_Number()
+'PURPOSE: adds a blank row with a number in formula form
+Dim LR As Long
+LR = range("A" & Rows, Count).End(xlUp).row
+Rows(LR).Copy
+Rows(LR + 1).Insert
+ActiveCell.FormulaR1C1 = "=+R[-1]C+1"
+    Selection.Copy
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+End Sub
+
+
+Sub Insert_Table_Of_Contents_1()
+'PURPOSE: Add a Table of Contents worksheets to easily navigate to any tab - Style 1
+
+Dim sht As Worksheet
+Dim Content_sht As Worksheet
+Dim myArray As Variant
+Dim x As Long, y As Long
+Dim shtName1 As String, shtName2 As String
+Dim ContentName As String
+
+'Inputs
+  ContentName = "Contents"
+
+'Optimize Code
+  Application.DisplayAlerts = False
+  Application.ScreenUpdating = False
+
+'Delete Contents Sheet if it already exists
+  On Error Resume Next
+    Worksheets("Contents").Activate
+  On Error GoTo 0
+
+  If ActiveSheet.Name = ContentName Then
+    myAnswer = MsgBox("A worksheet named [" & ContentName & _
+      "] has already been created, would you like to replace it?", vbYesNo)
+    
+    'Did user select No or Cancel?
+      If myAnswer <> vbYes Then GoTo ExitSub
+      
+    'Delete old Contents Tab
+      Worksheets(ContentName).Delete
+  End If
+
+'Create New Contents Sheet
+  Worksheets.Add before:=Worksheets(1)
+
+'Set variable to Contents Sheet
+  Set Content_sht = ActiveSheet
+
+'Format Contents Sheet
+  With Content_sht
+    .Name = ContentName
+    .range("B1") = "Table of Contents"
+    .range("B1").Font.Bold = True
+  End With
+
+'Create Array list with sheet names (excluding Contents)
+  ReDim myArray(1 To Worksheets.Count - 1)
+
+  For Each sht In ActiveWorkbook.Worksheets
+    If sht.Name <> ContentName Then
+      myArray(x + 1) = sht.Name
+      x = x + 1
+    End If
+  Next sht
+  
+'Alphabetize Sheet Names in Array List
+  For x = LBound(myArray) To UBound(myArray)
+    For y = x To UBound(myArray)
+      If UCase(myArray(y)) < UCase(myArray(x)) Then
+        shtName1 = myArray(x)
+        shtName2 = myArray(y)
+        myArray(x) = shtName2
+        myArray(y) = shtName1
+      End If
+     Next y
+  Next x
+
+'Create Table of Contents
+  For x = LBound(myArray) To UBound(myArray)
+    Set sht = Worksheets(myArray(x))
+    sht.Activate
+    With Content_sht
+      .Hyperlinks.Add .Cells(x + 2, 3), "", _
+      SubAddress:="'" & sht.Name & "'!A1", _
+      TextToDisplay:=sht.Name
+      .Cells(x + 2, 2).Value = x
+    End With
+  Next x
+  
+Content_sht.Activate
+Content_sht.Columns(3).EntireColumn.AutoFit
+
+'A Splash of Formatting! [Optional]
+  Columns("A:B").ColumnWidth = 3.86
+  range("B1").Font.Size = 18
+  range("B1:F1").Borders(xlEdgeBottom).Weight = xlThin
+  
+  With range("B3:B" & x + 1)
+    .Borders(xlInsideHorizontal).Color = RGB(255, 255, 255)
+    .Borders(xlInsideHorizontal).Weight = xlMedium
+    .HorizontalAlignment = xlCenter
+    .VerticalAlignment = xlCenter
+    .Font.Color = RGB(255, 255, 255)
+    .Interior.Color = RGB(91, 155, 213)
+  End With
+
+  'Adjust Zoom and Remove Gridlines
+    ActiveWindow.DisplayGridlines = False
+    ActiveWindow.Zoom = 130
+
+ExitSub:
+'Optimize Code
+  Application.DisplayAlerts = True
+  Application.ScreenUpdating = True
+  
+End Sub
+
+Sub Insert_Table_Of_Contents_2()
+'PURPOSE: Add a Table of Contents worksheets to easily navigate to any tab - Style 2
+    Dim PROFEXWorksheet As Worksheet
+    Dim tempWorksheetName, tempLink, nameOfTableOfContentsWorksheet As String
+    Dim i As Integer
+    
+    'Add a new worksheet
+    Sheets.Add
+
+    'Rename the worksheet
+    nameOfTableOfContentsWorksheet = "Table Of Contents"
+    ActiveSheet.Name = nameOfTableOfContentsWorksheet
+
+    'Add the headline
+    range("B3") = nameOfTableOfContentsWorksheet
+
+    'Initialize the counting variable i
+    i = 0
+    
+    
+    'Go through all worksheets as described
+    For Each PROFEXWorksheet In Worksheets
+            'Copy the current worksheet name
+            tempWorksheetName = PROFEXWorksheet.Name
+
+            'Create the link from the current worksheet and link it to cell A1
+            tempLink = "'" & tempWorksheetName & "'!R1C1"
+            
+            'Add the list entry
+            Sheets(nameOfTableOfContentsWorksheet).Cells(i + 5, 2) = tempWorksheetName
+
+            'Select it for inserting the hyperlink
+            Sheets(nameOfTableOfContentsWorksheet).Cells(i + 5, 2).Select
+
+            'Insert the hyperlink
+            ActiveSheet.Hyperlinks.Add Anchor:=Selection, Address:="", SubAddress:=tempLink
+
+            'Proceed with next entry and increase i therefore
+            i = i + 1
+    Next
+End Sub
+
+Sub Sort_Worksheets()
+'PURPOSE: Sorts worksheets alphabetically
+Dim i As Integer
+Dim j As Integer
+Dim iAnswer As VbMsgBoxResult
+iAnswer = MsgBox("Sort Sheets in Ascending Order?" & Chr(10) _
+& "Clicking No will sort in Descending Order", _
+vbYesNoCancel + vbQuestion + vbDefaultButton1, "Sort Worksheets")
+For i = 1 To Sheets.Count
+For j = 1 To Sheets.Count - 1
+If iAnswer = vbYes Then
+If UCase$(Sheets(j).Name) > UCase$(Sheets(j + 1).Name) Then
+Sheets(j).Move After:=Sheets(j + 1)
+End If
+ElseIf iAnswer = vbNo Then
+If UCase$(Sheets(j).Name) < UCase$(Sheets(j + 1).Name) Then
+Sheets(j).Move After:=Sheets(j + 1)
+End If
+End If
+Next j
+Next i
+End Sub
+
+Sub Lock_Cells_With_Formulas()
+'PURPOSE: Locks all cells with formulas
+'NOTE: you must do this on each sheet within the workbook.
+With ActiveSheet
+.Unprotect
+.Cells.Locked = False
+.Cells.SpecialCells(xlCellTypeFormulas).Locked = True
+.Protect AllowDeletingRows:=True
+End With
+End Sub
+Sub Unlock_Cells_With_Formulas()
+'PURPOSE: Unlocks any cells with formulas in the active worksheet.
+'NOTE: you must do this on each sheet within the workbook.
+With ActiveSheet
+.Protect
+.Cells.Locked = True
+.Cells.SpecialCells(xlCellTypeFormulas).Locked = False
+.Protect AllowDeletingRows:=False
+End With
+End Sub
+
+Sub Delete_Blank_Worksheets()
+'PURPOSE: Deletes all blank worksheets in the book.
+Dim ws As Worksheet
+On Error Resume Next
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+For Each ws In Application.Worksheets
+If Application.WorksheetFunction.CountA(ws.UsedRange) = 0 Then
+ws.Delete
+End If
+Next
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub
+
+Sub Add_Row_With_Number_1()
+'PURPOSE: adds a blank row with a number in formula form
+Dim LR As Long
+LR = range("A" & Rows, Count).End(xlUp).row
+Rows(LR).Copy
+Rows(LR + 1).Insert
+ActiveCell.FormulaR1C1 = "=+R[-1]C+1"
+    Selection.Copy
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+End Sub
+
+Sub Convert_Text_to_Values()
+'PURPOSE: converts selected text to a number
+
+On Error GoTo errhndlr
+ 
+ Selection.TextToColumns Destination:=Selection, DataType:=xlDelimited, _
+ TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+ Semicolon:=False, Comma:=False, Space:=False, Other:=False, FieldInfo _
+ :=Array(1, 1), TrailingMinusNumbers:=True
+ Exit Sub
+errhndlr:
+MsgBox "Hey, you're doing that wrong. Select the cells to convert", "ERROR"
+End Sub
+Sub Hide_Worksheets()
+'PURPOSE: Hides all but the active worksheet
+Dim wsSheet As Worksheet
+ For Each wsSheet In ActiveWorkbook.Worksheets
+ If wsSheet.Name <> ActiveSheet.Name Then
+ wsSheet.Visible = xlSheetHidden '// Or xlSheetVeryHidden or xlSheetVisible
+ End If
+ Next wsSheet
+End Sub
+Sub Unhide_Multiple_Sheets()
+'PURPOSE: This unhides all sheets
+Dim wsSheet As Worksheet
+ For Each wsSheet In ActiveWorkbook.Worksheets
+ If wsSheet.Name <> ActiveSheet.Name Then
+ wsSheet.Visible = xlSheetVisible '// Or xlSheetVeryHidden or xlSheetHidden
+ End If
+ Next wsSheet
+End Sub
+
+Sub multiline_Cells_To_Separate_Cells(rng As range)
+'PURPOSE: split cells into rows with a line break
+
+        Dim i As Long, j As Long, ubnd As Long
+        Dim cll As range
+        Dim arrVals As Variant, tempVal As Variant, vItem As Variant
+
+        With rng
+
+            ReDim arrVals(.Rows(1).row To rng.Rows.Count, 1 To 1) As Variant
+            For Each cll In rng.Cells
+                tempVal = cll.Value2
+                If InStr(1, tempVal, Chr(10)) > 0 Then
+                    vItem = Split(tempVal, Chr(10))
+                    i = i + 1
+                    ubnd = UBound(vItem)
+                    For j = 0 To ubnd
+                        arrVals(i + j, 1) = vItem(j)
+                    Next j
+                    i = i + ubnd
+
+                ElseIf tempVal <> vbNullString Then
+                    i = i + 1
+                    arrVals(i, 1) = tempVal
+                End If
+
+            Next cll
+
+            .Value2 = arrVals
+            .AutoFit ' optional
+
+        End With
+
+End Sub
+
+Sub Delete_Blank_Rows()
+'PURPOSE: Removes blank rows
+
+Dim x As Long
+
+With ActiveSheet
+
+    For x = .Cells.SpecialCells(xlCellTypeLastCell).row To 1 Step -1
+        If WorksheetFunction.CountA(.Rows(x)) = 0 Then
+            ActiveSheet.Rows(x).Delete
+        End If
+    Next
+
+End With
+
+End Sub
+
+Sub List_Tables()
+'PURPOSE: Opens a new shee and lists the tables in the file
+    Dim xTable As ListObject
+    Dim xSheet As Worksheet
+    Dim i As Long
+    i = -1
+    Sheets.Add.Name = "Table Name"
+    For Each xSheet In Worksheets
+        For Each xTable In xSheet.ListObjects
+            i = i + 1
+            Sheets("Table Name").range("A1").Offset(i).Value = xTable.Name
+        Next xTable
+    Next
+End Sub
+Sub Clear_Filters()
+'Purpose: Clears all filters from the sheet
+
+If ActiveSheet.FilterMode = True Then
+
+ActiveSheet.ShowAllData
+
+End If
+
+End Sub
+Sub Data_Form()
+'PURPOSE: Activates data form
+ActiveSheet.ShowDataForm
+End Sub
+
+Sub Show_blanks()
+'PURPOSE: looks for blank spaces in cells
+Dim rng As range
+For Each rng In ActiveSheet.UsedRange
+If rng.Value = " " Then
+rng.Style = "Note"
+End If
+Next rng
+End Sub
+
+
